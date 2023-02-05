@@ -34,36 +34,33 @@ func NewSession(c Connector, settings Settings, rebindingInterval time.Duration)
 		return nil, fmt.Errorf("invalid settings: ReadTimeout must greater than max(0, EnquireLink)")
 	}
 
-	conn, err := c.Connect()
-	if err == nil {
-		session = &Session{
-			c:                 c,
-			rebindingInterval: rebindingInterval,
-			originalOnClosed:  settings.OnClosed,
-		}
-
-		if rebindingInterval > 0 {
-			newSettings := settings
-			newSettings.OnClosed = func(state State) {
-				switch state {
-				case ExplicitClosing:
-					return
-
-				default:
-					if session.originalOnClosed != nil {
-						session.originalOnClosed(state)
-					}
-					session.rebind()
-				}
-			}
-			session.settings = newSettings
-		} else {
-			session.settings = settings
-		}
-
-		// bind to session
-		session.trx.Store(newTransceivable(conn, session.settings))
+	session = &Session{
+		c:                 c,
+		rebindingInterval: rebindingInterval,
+		originalOnClosed:  settings.OnClosed,
 	}
+
+	if rebindingInterval > 0 {
+		newSettings := settings
+		newSettings.OnClosed = func(state State) {
+			switch state {
+			case ExplicitClosing:
+				return
+
+			default:
+				if session.originalOnClosed != nil {
+					session.originalOnClosed(state)
+				}
+				session.rebind()
+			}
+		}
+		session.settings = newSettings
+	} else {
+		session.settings = settings
+	}
+
+	go session.rebind()
+
 	return
 }
 
@@ -119,6 +116,10 @@ func (s *Session) rebind() {
 
 				// reset rebinding state
 				atomic.StoreInt32(&s.rebinding, 0)
+
+				if s.settings.OnConnected != nil {
+					s.settings.OnConnected()
+				}
 
 				return
 			}
