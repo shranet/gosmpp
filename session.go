@@ -92,6 +92,14 @@ func (s *Session) Close() (err error) {
 	return
 }
 
+func (s *Session) IsAlive() bool {
+	if b := s.bound(); b != nil && b.out != nil && b.in != nil {
+		return atomic.LoadInt32(&b.out.aliveState) == Alive && atomic.LoadInt32(&b.in.aliveState) == Alive
+	}
+
+	return false
+}
+
 func (s *Session) close() (err error) {
 	if b := s.bound(); b != nil {
 		err = b.Close()
