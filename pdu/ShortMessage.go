@@ -157,7 +157,7 @@ func (c *ShortMessage) split() (multiSM []*ShortMessage, err error) {
 	multiSM = make([]*ShortMessage, 0, len(segments))
 
 	// all segments will have the same ref id
-	ref := getRefNum()
+	ref := GetRefNum()
 
 	// construct SM(s)
 	for i, seg := range segments {
@@ -267,7 +267,7 @@ func (c *ShortMessage) Encoding() data.Encoding {
 }
 
 // returns an atomically incrementing number each time it's called
-func getRefNum() uint32 {
+func GetRefNum() uint32 {
 	return atomic.AddUint32(&ref, 1)
 }
 

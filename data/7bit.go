@@ -69,6 +69,32 @@ var reverseEscape = map[byte]rune{
 	0x0A: '\f', 0x14: '^', 0x28: '{', 0x29: '}', 0x2F: '\\', 0x3C: '[', 0x3D: '~', 0x3E: ']', 0x40: '|', 0x65: '€',
 }
 
+func GSM7Septet(text string) int {
+	septets := 0
+	for _, r := range text {
+		if _, ok := forwardLookup[r]; !ok {
+			if _, ok := forwardEscape[r]; !ok {
+				return -1
+			} else {
+				septets += 2
+			}
+		} else {
+			septets += 1
+		}
+	}
+
+	return septets
+}
+
+func GSM7Octet(text string) int {
+	septets := GSM7Septet(text)
+	if septets == -1 {
+		return -1
+	}
+
+	return (septets*7 + 7) / 8
+}
+
 // ValidateGSM7String returns the characters, in the given text, that can not be represented in GSM 7-bit encoding.
 func ValidateGSM7String(text string) []rune {
 	invalidChars := make([]rune, 0, 4)
