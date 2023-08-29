@@ -2,6 +2,7 @@ package data
 
 import (
 	"golang.org/x/text/encoding/charmap"
+	"log"
 	"unicode"
 	"unicode/utf8"
 )
@@ -35,66 +36,146 @@ func IsISO8859_1(s string) bool {
 	return true
 }
 
-func SMSParts(text string) (int, int, Encoding) {
-	gsm7octet := GSM7Octet(text)
-	total := 1
-	size := -1
-
-	// Agar gsm7 bit bo'lmasa, ASCII ga tekshiramiz
-	isAscii := false
-	if gsm7octet == -1 {
-		isAscii = IsASCII(text)
+func FindInAsciiNonGsm38() {
+	for i := 32; i < unicode.MaxASCII; i++ {
+		char := rune(i)
+		if _, ok := forwardLookup[char]; !ok {
+			if _, ok := forwardEscape[char]; !ok {
+				log.Println(i, string(char))
+			}
+		}
 	}
+}
 
-	//GSM default va ASCII bu 7 bit
-	if gsm7octet != -1 || isAscii {
-		size = 160 //Bir butun bitta SMS
+type SmsPart struct {
+	Message string `json:"message"`
+	Chars   int    `json:"chars"`
+	Bytes   int    `json:"bytes"`
+}
 
-		smLength := gsm7octet
-		if isAscii {
-			smLength = len(text)
-		}
+func SplitSms(text string) ([]SmsPart, Encoding) {
+	isGsm0338 := true
+	//isAscii := true
+	//isIso88591 := true
 
-		if smLength > 160 {
-			//Qismlarga ajratilgan SMS. UDH headerni olib tashlaymiz (6 byte)
-			//(140 - 6) * 8 / 7 = ~153
-			size = 153
+	totalSeptets := 0
 
-			//ceil qilmaslik uchun +
-			total = (smLength + (140 - 7)) / (140 - 6)
-		}
-
-		var coding Encoding
-		if isAscii {
-			coding = ASCII
+	for _, char := range text {
+		//GSM 0338 emasligiga tekshiryapmiz
+		if _, ok := forwardLookup[char]; !ok {
+			if _, ok := forwardEscape[char]; !ok {
+				isGsm0338 = false
+			} else {
+				totalSeptets += 2
+			}
 		} else {
-			coding = GSM7BIT
+			totalSeptets += 1
 		}
 
-		return total, size, coding
+		////ASCII emasligiga tekshiryapmiz
+		//if int(char) > unicode.MaxASCII {
+		//	isAscii = false
+		//}
+		//
+		//if _, ok := charmap.ISO8859_1.EncodeRune(char); !ok {
+		//	isIso88591 = false
+		//}
+		//
+		//if !isGsm0338 && !isAscii && !isIso88591 {
+		//	break
+		//}
 	}
 
-	if IsISO8859_1(text) {
-		size = 140
-		smLength := utf8.RuneCountInString(text)
-		if smLength > 140 {
-			// 140 - 6 (UDH header size)
-			size = 134
+	//log.Println(isGsm0338, isAscii, isIso88591, totalSeptets)
 
-			total = (smLength + (140 - 7)) / (140 - 6)
+	if isGsm0338 {
+		return splitGsm0338(text, totalSeptets), GSM7BIT
+	}
+
+	//if isAscii {
+	//	return splitAscii(text), ASCII
+	//}
+
+	return splitUCS2(text), UCS2
+}
+
+func splitGsm0338(text string, totalSeptets int) []SmsPart {
+	var result []SmsPart
+
+	if totalSeptets <= 160 {
+		return []SmsPart{
+			{
+				Message: text,
+				Bytes:   (totalSeptets*7 + 7) / 8,
+				Chars:   utf8.RuneCountInString(text),
+			},
+		}
+	}
+
+	part := SmsPart{Message: "", Chars: 0, Bytes: 0}
+
+	septets := 0
+	charSeptet := 0
+
+	for _, char := range text {
+		if _, ok := forwardLookup[char]; ok {
+			charSeptet = 1
+		} else if _, ok := forwardEscape[char]; ok {
+			charSeptet = 2
+		} else {
+			continue
 		}
 
-		return total, size, LATIN1
+		if septets+charSeptet <= 153 {
+			part.Message += string(char)
+			part.Chars += 1
+
+			septets += charSeptet
+		} else {
+			part.Bytes = (septets*7 + 7) / 8
+			result = append(result, part)
+
+			part = SmsPart{Message: string(char), Chars: 1, Bytes: 0}
+			septets = charSeptet
+		}
 	}
 
-	size = 70
-	smLength := utf8.RuneCountInString(text)
-	if smLength > 70 {
-		size = 63
-
-		//ceil qilmaslik uchun +
-		total = (smLength + (70 - 4)) / (70 - 3) //3 - bu aslida 6 octetning yarmi
+	if septets > 0 {
+		part.Bytes = (septets*7 + 7) / 8
+		result = append(result, part)
 	}
 
-	return total, size, UCS2
+	return result
+}
+
+func splitUCS2(text string) []SmsPart {
+	var result []SmsPart
+	runes := []rune(text)
+
+	if len(runes) <= 70 {
+		return []SmsPart{
+			{
+				Message: text,
+				Bytes:   len(runes) * 2,
+				Chars:   len(runes),
+			},
+		}
+	}
+
+	for len(runes) > 0 {
+		en := 70 - 3
+		if en > len(runes) {
+			en = len(runes)
+		}
+
+		result = append(result, SmsPart{
+			Message: string(runes[:en]),
+			Bytes:   en * 2,
+			Chars:   en,
+		})
+
+		runes = runes[en:]
+	}
+
+	return result
 }
