@@ -53,9 +53,9 @@ type SmsPart struct {
 	Bytes   int    `json:"bytes"`
 }
 
-func SplitSms(text string) ([]SmsPart, Encoding) {
+func SplitSms(text string, defaultEncoding int16) ([]SmsPart, Encoding) {
 	isGsm0338 := true
-	//isAscii := true
+	isAscii := true
 	//isIso88591 := true
 
 	totalSeptets := 0
@@ -73,10 +73,10 @@ func SplitSms(text string) ([]SmsPart, Encoding) {
 		}
 
 		////ASCII emasligiga tekshiryapmiz
-		//if int(char) > unicode.MaxASCII {
-		//	isAscii = false
-		//}
-		//
+		if int(char) > unicode.MaxASCII {
+			isAscii = false
+		}
+
 		//if _, ok := charmap.ISO8859_1.EncodeRune(char); !ok {
 		//	isIso88591 = false
 		//}
@@ -88,13 +88,13 @@ func SplitSms(text string) ([]SmsPart, Encoding) {
 
 	//log.Println(isGsm0338, isAscii, isIso88591, totalSeptets)
 
-	if isGsm0338 {
+	if isGsm0338 && defaultEncoding == 0 {
 		return splitGsm0338(text, totalSeptets), GSM7BIT
 	}
 
-	//if isAscii {
-	//	return splitAscii(text), ASCII
-	//}
+	if isAscii && defaultEncoding == 1 {
+		return splitAscii(text), ASCII
+	}
 
 	return splitUCS2(text), UCS2
 }
@@ -126,6 +126,48 @@ func splitGsm0338(text string, totalSeptets int) []SmsPart {
 			continue
 		}
 
+		if septets+charSeptet <= 153 {
+			part.Message += string(char)
+			part.Chars += 1
+
+			septets += charSeptet
+		} else {
+			part.Bytes = (septets*7 + 7) / 8
+			result = append(result, part)
+
+			part = SmsPart{Message: string(char), Chars: 1, Bytes: 0}
+			septets = charSeptet
+		}
+	}
+
+	if septets > 0 {
+		part.Bytes = (septets*7 + 7) / 8
+		result = append(result, part)
+	}
+
+	return result
+}
+
+func splitAscii(text string) []SmsPart {
+	var result []SmsPart
+	totalSeptets := len([]byte(text))
+
+	if totalSeptets <= 160 {
+		return []SmsPart{
+			{
+				Message: text,
+				Bytes:   (totalSeptets*7 + 7) / 8,
+				Chars:   utf8.RuneCountInString(text),
+			},
+		}
+	}
+
+	part := SmsPart{Message: "", Chars: 0, Bytes: 0}
+
+	septets := 0
+	charSeptet := 1
+
+	for _, char := range text {
 		if septets+charSeptet <= 153 {
 			part.Message += string(char)
 			part.Chars += 1
