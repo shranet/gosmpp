@@ -92,7 +92,7 @@ func (t *receivable) loop() {
 		// read pdu from conn
 		var p pdu.PDU
 		if err = t.conn.SetReadTimeout(t.settings.ReadTimeout); err == nil {
-			p, err = pdu.Parse(t.conn)
+			p, err = pdu.ParseWithLogger(t.conn, t.settings.Logger)
 		}
 
 		// check error

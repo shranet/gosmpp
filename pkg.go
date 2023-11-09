@@ -1,7 +1,10 @@
 package gosmpp
 
 import (
+	"fmt"
+	"github.com/linxGnu/gosmpp/data"
 	"io"
+	"log"
 	"time"
 
 	"github.com/linxGnu/gosmpp/pdu"
@@ -25,6 +28,36 @@ type Transmitter interface {
 type Receiver interface {
 	io.Closer
 	SystemID() string
+}
+
+type DefaultLogger struct {
+}
+
+func (l *DefaultLogger) Info(v ...interface{}) {
+	l.LevelPrintLn("INFO", v...)
+}
+
+func (l *DefaultLogger) Warn(v ...interface{}) {
+	l.LevelPrintLn("WARN", v...)
+}
+
+func (l *DefaultLogger) Error(v ...interface{}) {
+	l.LevelPrintLn("ERROR", v...)
+}
+
+func (l *DefaultLogger) Debug(v ...interface{}) {
+	l.LevelPrintLn("DEBUG", v...)
+}
+
+func (l *DefaultLogger) Printf(format string, v ...interface{}) {
+	l.Info(fmt.Sprintf(format, v...))
+}
+
+func (l *DefaultLogger) LevelPrintLn(level string, v ...interface{}) {
+	params := []interface{}{level}
+	params = append(params, v...)
+
+	log.Println(params...)
 }
 
 // Settings for TX (transmitter), RX (receiver), TRX (transceiver).
@@ -66,5 +99,6 @@ type Settings struct {
 
 	OnConnected ConnectedCallback
 
+	Logger   data.SmsboxLogger
 	response func(pdu.PDU)
 }

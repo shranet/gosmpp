@@ -43,6 +43,8 @@ func newTransceivable(conn *Connection, settings Settings) *transceivable {
 				}
 			}
 		},
+
+		Logger: settings.Logger,
 	})
 
 	t.in = newReceivable(conn, Settings{
@@ -70,6 +72,8 @@ func newTransceivable(conn *Connection, settings Settings) *transceivable {
 		response: func(p pdu.PDU) {
 			_ = t.Submit(p)
 		},
+
+		Logger: settings.Logger,
 	})
 
 	t.out.start()

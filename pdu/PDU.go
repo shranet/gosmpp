@@ -1,6 +1,7 @@
 package pdu
 
 import (
+	"encoding/hex"
 	"io"
 
 	"github.com/linxGnu/gosmpp/data"
@@ -156,6 +157,11 @@ func (c *base) IsGNack() bool {
 
 // Parse PDU from reader.
 func Parse(r io.Reader) (pdu PDU, err error) {
+	return ParseWithLogger(r, nil)
+}
+
+// ParseWithLogger PDU from reader and write to log
+func ParseWithLogger(r io.Reader, logger data.SmsboxLogger) (pdu PDU, err error) {
 	var headerBytes [16]byte
 
 	if _, err = io.ReadFull(r, headerBytes[:]); err != nil {
@@ -163,6 +169,11 @@ func Parse(r io.Reader) (pdu PDU, err error) {
 	}
 
 	header := ParseHeader(headerBytes)
+
+	if logger != nil {
+		logger.Info("[SMPP]", "[header]", "id:", header.CommandID, "status:", header.CommandStatus, "len:", header.CommandLength, "sn:", header.SequenceNumber, "hex:", hex.EncodeToString(headerBytes[:]))
+	}
+
 	if header.CommandLength < 16 || header.CommandLength > data.MAX_PDU_LEN {
 		err = errors.ErrInvalidPDU
 		return
@@ -174,6 +185,10 @@ func Parse(r io.Reader) (pdu PDU, err error) {
 		if _, err = io.ReadFull(r, bodyBytes); err != nil {
 			return
 		}
+	}
+
+	if logger != nil {
+		logger.Info("[SMPP]", "[body]", "id:", header.CommandID, "sn:", header.SequenceNumber, "hex:", hex.EncodeToString(bodyBytes))
 	}
 
 	// try to create pdu

@@ -34,6 +34,10 @@ func NewSession(c Connector, settings Settings, rebindingInterval time.Duration)
 		return nil, fmt.Errorf("invalid settings: ReadTimeout must greater than max(0, EnquireLink)")
 	}
 
+	//if settings.Logger == nil {
+	//	settings.Logger = &DefaultLogger{}
+	//}
+
 	session = &Session{
 		c:                 c,
 		rebindingInterval: rebindingInterval,
