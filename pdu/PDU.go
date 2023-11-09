@@ -49,11 +49,13 @@ type PDU interface {
 
 type base struct {
 	Header
-	OptionalParameters map[Tag]Field
+	ReadOptionalParameters bool
+	OptionalParameters     map[Tag]Field
 }
 
 func newBase() (v base) {
 	v.OptionalParameters = make(map[Tag]Field)
+	v.ReadOptionalParameters = true
 	v.AssignSequenceNumber()
 	return
 }
@@ -73,7 +75,7 @@ func (c *base) unmarshal(b *ByteBuffer, bodyReader func(*ByteBuffer) error) (err
 			err = bodyReader(b)
 		}
 
-		if err == nil {
+		if err == nil && c.ReadOptionalParameters {
 			// command length
 			cmdLength := int(c.CommandLength)
 

@@ -98,7 +98,26 @@ func (s *Session) Close() (err error) {
 
 func (s *Session) IsAlive() bool {
 	if b := s.bound(); b != nil && b.out != nil && b.in != nil {
-		return atomic.LoadInt32(&b.out.aliveState) == Alive && atomic.LoadInt32(&b.in.aliveState) == Alive
+		outAlive := atomic.LoadInt32(&b.out.aliveState) == Alive
+		inAlive := atomic.LoadInt32(&b.in.aliveState) == Alive
+		if s.settings.Logger != nil {
+			s.settings.Logger.Info("[SESSION]", "in:", inAlive, "out:", outAlive)
+		}
+		return outAlive && inAlive
+	} else {
+		if s.settings.Logger != nil {
+			if b == nil {
+				s.settings.Logger.Info("[SESSION]", "bound is nil")
+			} else {
+				if b.in == nil {
+					s.settings.Logger.Info("[SESSION]", "in is nil")
+				}
+
+				if b.out == nil {
+					s.settings.Logger.Info("[SESSION]", "out is nil")
+				}
+			}
+		}
 	}
 
 	return false
@@ -112,6 +131,16 @@ func (s *Session) close() (err error) {
 }
 
 func (s *Session) rebind() {
+	if s.settings.Logger != nil {
+		s.settings.Logger.Info("[SESSION]", "rebind")
+	}
+
+	defer func() {
+		if s.settings.Logger != nil {
+			s.settings.Logger.Info("[SESSION]", "Exit from rebind")
+		}
+	}()
+
 	if atomic.CompareAndSwapInt32(&s.rebinding, 0, 1) {
 		_ = s.close()
 
@@ -123,6 +152,9 @@ func (s *Session) rebind() {
 				}
 				time.Sleep(s.rebindingInterval)
 			} else {
+				if s.settings.Logger != nil {
+					s.settings.Logger.Info("[SESSION]", "Store new transceivable")
+				}
 				// bind to session
 				s.trx.Store(newTransceivable(conn, s.settings))
 
