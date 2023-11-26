@@ -4,6 +4,7 @@ package data
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
 	"reflect"
 	"testing"
 
@@ -203,5 +204,55 @@ func TestInvalidByte(t *testing.T) {
 		if err != ErrInvalidByte {
 			t.Fatalf("%2d: expected '%s' but got '%s'", index, ErrInvalidByte, err.Error())
 		}
+	}
+}
+
+func TestNexmoCharset(t *testing.T) {
+	single := []rune{
+		'!', '"', '#', '$', '%', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '_', '¡', '£', '¥', '§', '¿', '&', '¤',
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ',
+		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+		'Ä', 'Å', 'Æ', 'Ç', 'É', 'Ñ', 'Ø', 'ø', 'Ü', 'ß', 'Ö', 'à', 'ä', 'å', 'æ', 'è', 'é', 'ì', 'ñ', 'ò', 'ö', 'ù', 'ü', 'Δ', 'Φ', 'Γ', 'Λ', 'Ω', 'Π', 'Ψ', 'Σ', 'Θ', 'Ξ',
+	}
+
+	multiple := []rune{
+		'|', '^', '€', '{', '}', '[', ']', '~', '\\',
+	}
+
+	fl := make(map[rune]byte)
+	for k, v := range forwardLookup {
+		fl[k] = v
+	}
+
+	for _, s := range single {
+		if _, ok := fl[s]; !ok {
+			t.Error(s, "not found")
+		} else {
+			delete(fl, s)
+		}
+	}
+
+	fe := make(map[rune]byte)
+	for k, v := range forwardEscape {
+		fe[k] = v
+	}
+
+	for _, m := range multiple {
+		if _, ok := forwardEscape[m]; !ok {
+			t.Error(m, "not found")
+		} else {
+			delete(fe, m)
+		}
+	}
+
+	log.Println(len(fl), len(forwardLookup))
+	for k, v := range fl {
+		log.Println("Forward:", k, v)
+	}
+
+	log.Println(len(fe), len(forwardEscape))
+	for k, v := range fe {
+		log.Println("Escape:", k, v)
 	}
 }

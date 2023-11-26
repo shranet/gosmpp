@@ -47,6 +47,36 @@ func FindInAsciiNonGsm38() {
 	}
 }
 
+func VonagePartsCount(text string, unicode bool) int {
+	if unicode {
+		total := utf8.RuneCountInString(text)
+		if total <= 70 {
+			return 1
+		}
+
+		return (total + 66) / 67
+	}
+
+	totalSeptets := 0
+	for _, char := range text {
+		if _, ok := forwardLookup[char]; ok {
+			totalSeptets += 1
+		} else if _, ok := forwardEscape[char]; ok {
+			totalSeptets += 2
+		} else {
+			//unicode char va vonage 1 byte deb qaraydi
+			//odatda ? belgisiga almashtiriladi
+			totalSeptets += 1
+		}
+	}
+
+	if totalSeptets <= 160 {
+		return 1
+	}
+
+	return (totalSeptets + 152) / 153
+}
+
 type SmsPart struct {
 	Message string `json:"message"`
 	Chars   int    `json:"chars"`
