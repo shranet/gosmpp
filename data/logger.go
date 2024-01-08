@@ -1,10 +1,10 @@
 package data
 
 type SmsboxLogger interface {
-	Info(v ...interface{})
-	Warn(v ...interface{})
-	Error(v ...interface{})
-	Debug(v ...interface{})
+	Info(message string, v ...interface{})
+	Warn(message string, v ...interface{})
+	Error(message string, v ...interface{})
+	Debug(message string, v ...interface{})
 	Printf(format string, v ...interface{})
-	LevelPrintLn(level string, v ...interface{})
+	LevelPrintLn(level string, message string, v ...interface{})
 }

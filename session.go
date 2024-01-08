@@ -97,24 +97,28 @@ func (s *Session) Close() (err error) {
 }
 
 func (s *Session) IsAlive() bool {
+	logExtra := map[string]string{
+		"api": "smpp",
+	}
+
 	if b := s.bound(); b != nil && b.out != nil && b.in != nil {
 		outAlive := atomic.LoadInt32(&b.out.aliveState) == Alive
 		inAlive := atomic.LoadInt32(&b.in.aliveState) == Alive
 		if s.settings.Logger != nil {
-			s.settings.Logger.Info("[SESSION]", "in:", inAlive, "out:", outAlive)
+			s.settings.Logger.Info(fmt.Sprintf("Ulanish holati (in=%t, out=%t)", inAlive, outAlive), logExtra)
 		}
 		return outAlive && inAlive
 	} else {
 		if s.settings.Logger != nil {
 			if b == nil {
-				s.settings.Logger.Info("[SESSION]", "bound is nil")
+				s.settings.Logger.Info("Ulanish holati (bound is nil)", logExtra)
 			} else {
 				if b.in == nil {
-					s.settings.Logger.Info("[SESSION]", "in is nil")
+					s.settings.Logger.Info("Ulanish holati (in is nil)", logExtra)
 				}
 
 				if b.out == nil {
-					s.settings.Logger.Info("[SESSION]", "out is nil")
+					s.settings.Logger.Info("Ulanish holati (out is nil)", logExtra)
 				}
 			}
 		}
@@ -131,13 +135,17 @@ func (s *Session) close() (err error) {
 }
 
 func (s *Session) rebind() {
+	logExtra := map[string]string{
+		"api": "smpp",
+	}
+
 	if s.settings.Logger != nil {
-		s.settings.Logger.Info("[SESSION]", "rebind")
+		s.settings.Logger.Info("Serverga qayta ulanish (rebind)", logExtra)
 	}
 
 	defer func() {
 		if s.settings.Logger != nil {
-			s.settings.Logger.Info("[SESSION]", "Exit from rebind")
+			s.settings.Logger.Info("Serverga qayta ulanish funksiyasida chiqish", logExtra)
 		}
 	}()
 
@@ -153,7 +161,7 @@ func (s *Session) rebind() {
 				time.Sleep(s.rebindingInterval)
 			} else {
 				if s.settings.Logger != nil {
-					s.settings.Logger.Info("[SESSION]", "Store new transceivable")
+					s.settings.Logger.Info("Serverga qayta muvaffaqiyatli ulandi", logExtra)
 				}
 				// bind to session
 				s.trx.Store(newTransceivable(conn, s.settings))
