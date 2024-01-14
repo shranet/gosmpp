@@ -2,6 +2,7 @@ package pdu
 
 import (
 	"encoding/hex"
+	"fmt"
 	"io"
 
 	"github.com/linxGnu/gosmpp/data"
@@ -172,8 +173,17 @@ func ParseWithLogger(r io.Reader, logger data.SmsboxLogger) (pdu PDU, err error)
 
 	header := ParseHeader(headerBytes)
 
+	logExtra := map[string]string{
+		"api": "smpp",
+	}
+
+	commandIdName := "<nil>"
+	if v, ok := data.CommandIDTypeName[header.CommandID]; ok {
+		commandIdName = v
+	}
+
 	if logger != nil {
-		logger.Info("[SMPP]", "[header]", "id:", header.CommandID, "status:", header.CommandStatus, "len:", header.CommandLength, "sn:", header.SequenceNumber, "hex:", hex.EncodeToString(headerBytes[:]))
+		logger.Info(fmt.Sprintf("SMPP recv: command id=%s, command status=%d, command length=%d, sequence number=%d, hex=%s", commandIdName, header.CommandStatus, header.CommandLength, header.SequenceNumber, hex.EncodeToString(headerBytes[:])), logExtra)
 	}
 
 	if header.CommandLength < 16 || header.CommandLength > data.MAX_PDU_LEN {
@@ -190,7 +200,7 @@ func ParseWithLogger(r io.Reader, logger data.SmsboxLogger) (pdu PDU, err error)
 	}
 
 	if logger != nil {
-		logger.Info("[SMPP]", "[body]", "id:", header.CommandID, "sn:", header.SequenceNumber, "hex:", hex.EncodeToString(bodyBytes))
+		logger.Info(fmt.Sprintf("SMPP body: command id=%s, sequence number=%d, hex=%s", commandIdName, header.SequenceNumber, hex.EncodeToString(bodyBytes)), logExtra)
 	}
 
 	// try to create pdu

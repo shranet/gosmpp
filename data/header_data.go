@@ -8,7 +8,7 @@ type CommandStatusType int32
 // CommandIDType is type of command id.
 type CommandIDType int32
 
-//nolint
+// nolint
 const (
 	// SMPP Command ID Set
 	GENERIC_NACK          = CommandIDType(-2147483648)
@@ -40,7 +40,37 @@ const (
 	DATA_SM_RESP          = CommandIDType(-2147483389)
 )
 
-//nolint
+var CommandIDTypeName = map[CommandIDType]string{
+	GENERIC_NACK:          "GENERIC_NACK",
+	BIND_RECEIVER:         "BIND_RECEIVER",
+	BIND_RECEIVER_RESP:    "BIND_RECEIVER_RESP",
+	BIND_TRANSMITTER:      "BIND_TRANSMITTER",
+	BIND_TRANSMITTER_RESP: "BIND_TRANSMITTER_RESP",
+	QUERY_SM:              "QUERY_SM",
+	QUERY_SM_RESP:         "QUERY_SM_RESP",
+	SUBMIT_SM:             "SUBMIT_SM",
+	SUBMIT_SM_RESP:        "SUBMIT_SM_RESP",
+	DELIVER_SM:            "DELIVER_SM",
+	DELIVER_SM_RESP:       "DELIVER_SM_RESP",
+	UNBIND:                "UNBIND",
+	UNBIND_RESP:           "UNBIND_RESP",
+	REPLACE_SM:            "REPLACE_SM",
+	REPLACE_SM_RESP:       "REPLACE_SM_RESP",
+	CANCEL_SM:             "CANCEL_SM",
+	CANCEL_SM_RESP:        "CANCEL_SM_RESP",
+	BIND_TRANSCEIVER:      "BIND_TRANSCEIVER",
+	BIND_TRANSCEIVER_RESP: "BIND_TRANSCEIVER_RESP",
+	OUTBIND:               "OUTBIND",
+	ENQUIRE_LINK:          "ENQUIRE_LINK",
+	ENQUIRE_LINK_RESP:     "ENQUIRE_LINK_RESP",
+	SUBMIT_MULTI:          "SUBMIT_MULTI",
+	SUBMIT_MULTI_RESP:     "SUBMIT_MULTI_RESP",
+	ALERT_NOTIFICATION:    "ALERT_NOTIFICATION",
+	DATA_SM:               "DATA_SM",
+	DATA_SM_RESP:          "DATA_SM_RESP",
+}
+
+// nolint
 const (
 	// Command_Status Error Codes
 	ESME_ROK           = CommandStatusType(0x00000000)
