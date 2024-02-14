@@ -83,7 +83,7 @@ type SmsPart struct {
 	Bytes   int    `json:"bytes"`
 }
 
-func SplitSms(text string, defaultEncoding int16) ([]SmsPart, Encoding) {
+func SplitSms(text string, defaultEncoding int16, smscID int32) ([]SmsPart, Encoding) {
 	isGsm0338 := true
 	isAscii := true
 	//isIso88591 := true
@@ -100,6 +100,16 @@ func SplitSms(text string, defaultEncoding int16) ([]SmsPart, Encoding) {
 			}
 		} else {
 			totalSeptets += 1
+		}
+
+		if smscID == 4 {
+			//humans
+		}
+
+		if smscID == 5 || smscID == 6 {
+			if char == '_' {
+				isGsm0338 = false
+			}
 		}
 
 		////ASCII emasligiga tekshiryapmiz
