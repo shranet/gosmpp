@@ -231,6 +231,48 @@ func splitAscii(text string) []SmsPart {
 }
 
 func splitUCS2(text string) []SmsPart {
+	result := []SmsPart{}
+
+	partSingle := SmsPart{Message: "", Chars: 0, Bytes: 0}
+	part := SmsPart{Message: "", Chars: 0, Bytes: 0}
+
+	for _, r := range text {
+		char := string(r)
+		charBytes := len(char)
+
+		//UCS2 da oddiy belgilar ham 2 byte joy oladi
+		if charBytes == 1 {
+			charBytes = 2
+		}
+
+		partSingle.Message += char
+		partSingle.Chars += 1
+		partSingle.Bytes += charBytes
+
+		if part.Bytes+charBytes <= 134 { //67 ta belgi faqat 2 bytedan
+			part.Message += char
+			part.Chars += 1
+			part.Bytes += charBytes
+		} else {
+			result = append(result, part)
+			part = SmsPart{Message: char, Chars: 1, Bytes: charBytes}
+		}
+	}
+
+	//Agar SMS 1 ta qismdan iborat bo'lsa
+	if partSingle.Bytes <= 140 {
+		return []SmsPart{partSingle}
+	}
+
+	if part.Bytes > 0 {
+		result = append(result, part)
+	}
+
+	return result
+}
+
+/*
+func splitUCS2(text string) []SmsPart {
 	var result []SmsPart
 	runes := []rune(text)
 
@@ -261,3 +303,4 @@ func splitUCS2(text string) []SmsPart {
 
 	return result
 }
+*/
