@@ -102,6 +102,13 @@ func SplitSms(text string, defaultEncoding int16, smscID int32) ([]SmsPart, Enco
 			totalSeptets += 1
 		}
 
+		if smscID == 2 {
+			//beeline
+			if char == '@' {
+				isGsm0338 = false
+			}
+		}
+
 		if smscID == 4 {
 			//humans
 		}
