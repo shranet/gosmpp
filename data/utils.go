@@ -78,12 +78,14 @@ func VonagePartsCount(text string, unicode bool) int {
 }
 
 type SmsPart struct {
-	Message string `json:"message"`
-	Chars   int    `json:"chars"`
-	Bytes   int    `json:"bytes"`
+	Message         string      `json:"message"`
+	Chars           int         `json:"chars"`
+	Bytes           int         `json:"bytes"`
+	HasShortMessage bool        `json:"-"`
+	ShortMessage    interface{} `json:"-"`
 }
 
-func SplitSms(text string, defaultEncoding int16, smscID int32) ([]SmsPart, Encoding) {
+func SplitSms(text string, defaultEncoding int16, smscID int32) ([]*SmsPart, Encoding) {
 	isGsm0338 := true
 	isAscii := true
 	//isIso88591 := true
@@ -143,14 +145,14 @@ func SplitSms(text string, defaultEncoding int16, smscID int32) ([]SmsPart, Enco
 		return splitAscii(text), ASCII
 	}
 
-	return splitUCS2(text), UCS2
+	return SplitUCS2(text), UCS2
 }
 
-func splitGsm0338(text string, totalSeptets int) []SmsPart {
-	var result []SmsPart
+func splitGsm0338(text string, totalSeptets int) []*SmsPart {
+	var result []*SmsPart
 
 	if totalSeptets <= 160 {
-		return []SmsPart{
+		return []*SmsPart{
 			{
 				Message: text,
 				Bytes:   (totalSeptets*7 + 7) / 8,
@@ -159,7 +161,7 @@ func splitGsm0338(text string, totalSeptets int) []SmsPart {
 		}
 	}
 
-	part := SmsPart{Message: "", Chars: 0, Bytes: 0}
+	part := &SmsPart{Message: "", Chars: 0, Bytes: 0}
 
 	septets := 0
 	charSeptet := 0
@@ -182,7 +184,7 @@ func splitGsm0338(text string, totalSeptets int) []SmsPart {
 			part.Bytes = (septets*7 + 7) / 8
 			result = append(result, part)
 
-			part = SmsPart{Message: string(char), Chars: 1, Bytes: 0}
+			part = &SmsPart{Message: string(char), Chars: 1, Bytes: 0}
 			septets = charSeptet
 		}
 	}
@@ -195,12 +197,12 @@ func splitGsm0338(text string, totalSeptets int) []SmsPart {
 	return result
 }
 
-func splitAscii(text string) []SmsPart {
-	var result []SmsPart
+func splitAscii(text string) []*SmsPart {
+	var result []*SmsPart
 	totalSeptets := len([]byte(text))
 
 	if totalSeptets <= 160 {
-		return []SmsPart{
+		return []*SmsPart{
 			{
 				Message: text,
 				Bytes:   (totalSeptets*7 + 7) / 8,
@@ -209,7 +211,7 @@ func splitAscii(text string) []SmsPart {
 		}
 	}
 
-	part := SmsPart{Message: "", Chars: 0, Bytes: 0}
+	part := &SmsPart{Message: "", Chars: 0, Bytes: 0}
 
 	septets := 0
 	charSeptet := 1
@@ -224,7 +226,7 @@ func splitAscii(text string) []SmsPart {
 			part.Bytes = (septets*7 + 7) / 8
 			result = append(result, part)
 
-			part = SmsPart{Message: string(char), Chars: 1, Bytes: 0}
+			part = &SmsPart{Message: string(char), Chars: 1, Bytes: 0}
 			septets = charSeptet
 		}
 	}
@@ -237,11 +239,11 @@ func splitAscii(text string) []SmsPart {
 	return result
 }
 
-func splitUCS2(text string) []SmsPart {
-	result := []SmsPart{}
+func SplitUCS2(text string) []*SmsPart {
+	result := []*SmsPart{}
 
-	partSingle := SmsPart{Message: "", Chars: 0, Bytes: 0}
-	part := SmsPart{Message: "", Chars: 0, Bytes: 0}
+	partSingle := &SmsPart{Message: "", Chars: 0, Bytes: 0}
+	part := &SmsPart{Message: "", Chars: 0, Bytes: 0}
 
 	for _, r := range text {
 		char := string(r)
@@ -262,13 +264,13 @@ func splitUCS2(text string) []SmsPart {
 			part.Bytes += charBytes
 		} else {
 			result = append(result, part)
-			part = SmsPart{Message: char, Chars: 1, Bytes: charBytes}
+			part = &SmsPart{Message: char, Chars: 1, Bytes: charBytes}
 		}
 	}
 
 	//Agar SMS 1 ta qismdan iborat bo'lsa
 	if partSingle.Bytes <= 140 {
-		return []SmsPart{partSingle}
+		return []*SmsPart{partSingle}
 	}
 
 	if part.Bytes > 0 {
@@ -277,37 +279,3 @@ func splitUCS2(text string) []SmsPart {
 
 	return result
 }
-
-/*
-func splitUCS2(text string) []SmsPart {
-	var result []SmsPart
-	runes := []rune(text)
-
-	if len(runes) <= 70 {
-		return []SmsPart{
-			{
-				Message: text,
-				Bytes:   len(runes) * 2,
-				Chars:   len(runes),
-			},
-		}
-	}
-
-	for len(runes) > 0 {
-		en := 70 - 3
-		if en > len(runes) {
-			en = len(runes)
-		}
-
-		result = append(result, SmsPart{
-			Message: string(runes[:en]),
-			Bytes:   en * 2,
-			Chars:   en,
-		})
-
-		runes = runes[en:]
-	}
-
-	return result
-}
-*/

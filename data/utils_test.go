@@ -46,7 +46,7 @@ func TestFindEncoding(t *testing.T) {
 		if test.targetEncoding == ASCIICoding {
 			defaultEncoding = 1
 		}
-		parts, enc := SplitSms(test.sms, defaultEncoding)
+		parts, enc := SplitSms(test.sms, defaultEncoding, 0)
 		log.Println(len(parts), enc, test.sms)
 		require.Equal(t, len(parts), test.targetTotal, "total")
 		//require.Equal(t, parts[0].Bytes, test.targetSize, "size")

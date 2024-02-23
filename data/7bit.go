@@ -24,7 +24,7 @@ var ErrInvalidByte = errors.New("invalid gsm7 byte")
 GSM 7-bit default alphabet and extension table
 Source: https://en.wikipedia.org/wiki/GSM_03.38#GSM_7-bit_default_alphabet_and_extension_table_of_3GPP_TS_23.038_/_GSM_03.38
 */
-const escapeSequence = 0x1B
+const EscapeSequence = 0x1B
 
 var forwardLookup = map[rune]byte{
 	'@': 0x00, '£': 0x01, '$': 0x02, '¥': 0x03, 'è': 0x04, 'é': 0x05, 'ù': 0x06, 'ì': 0x07,
@@ -114,7 +114,7 @@ func ValidateGSM7Buffer(buffer []byte) []byte {
 	count := 0
 	for count < len(buffer) {
 		b := buffer[count]
-		if b == escapeSequence {
+		if b == EscapeSequence {
 			count++
 			if count >= len(buffer) {
 				invalidBytes = append(invalidBytes, b)
@@ -242,7 +242,7 @@ func (g *gsm7Decoder) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, er
 	builder := bytes.NewBufferString("")
 	for nSeptet < len(septets) {
 		b := septets[nSeptet]
-		if b == escapeSequence {
+		if b == EscapeSequence {
 			nSeptet++
 			if nSeptet >= len(septets) {
 				return 0, 0, ErrInvalidByte
@@ -362,7 +362,7 @@ func (g *gsm7Encoder) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, er
 		if v, ok := forwardLookup[r]; ok {
 			septets = append(septets, v)
 		} else if v, ok := forwardEscape[r]; ok {
-			septets = append(septets, escapeSequence, v)
+			septets = append(septets, EscapeSequence, v)
 		} else {
 			return 0, 0, ErrInvalidCharacter
 		}
