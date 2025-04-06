@@ -1,9 +1,9 @@
 # gosmpp
 
-[![](https://github.com/linxGnu/gosmpp/workflows/Build/badge.svg)]()
-[![Go Report Card](https://goreportcard.com/badge/github.com/linxGnu/gosmpp)](https://goreportcard.com/report/github.com/linxGnu/gosmpp)
+[![](https://github.com/shranet/gosmpp/workflows/Build/badge.svg)]()
+[![Go Report Card](https://goreportcard.com/badge/github.com/shranet/gosmpp)](https://goreportcard.com/report/github.com/shranet/gosmpp)
 [![Coverage Status](https://coveralls.io/repos/github/linxGnu/gosmpp/badge.svg?branch=master)](https://coveralls.io/github/linxGnu/gosmpp?branch=master)
-[![godoc](https://img.shields.io/badge/docs-GoDoc-green.svg)](https://godoc.org/github.com/linxGnu/gosmpp)
+[![godoc](https://img.shields.io/badge/docs-GoDoc-green.svg)](https://godoc.org/github.com/shranet/gosmpp)
 
 SMPP (3.4) Client Library in pure Go.
 
@@ -12,7 +12,7 @@ This library is well tested with SMSC simulators:
 
 ## Installation
 ```
-go get -u github.com/linxGnu/gosmpp
+go get -u github.com/shranet/gosmpp
 ```
 
 ## Usage
@@ -57,14 +57,14 @@ go get -u github.com/linxGnu/gosmpp
 
 ### Version (0.1.4.RC+)
 
-- Full example could be found: [here](https://github.com/linxGnu/gosmpp/blob/master/example)
+- Full example could be found: [here](https://github.com/shranet/gosmpp/blob/master/example)
   - In this example, you should run smsc first:
     - Build and run SMSC Simulator:
 	```bash
 	g++ -std=c++11 example/smsc_simulator/smsc.cpp -o smsc
 	./smsc &
 	```
-    - Run smpp client in the example: https://github.com/linxGnu/gosmpp/blob/master/example/main.go
+    - Run smpp client in the example: https://github.com/shranet/gosmpp/blob/master/example/main.go
     ```bash
 	go run example/main.go
 	```

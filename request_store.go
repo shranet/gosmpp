@@ -3,8 +3,8 @@ package gosmpp
 import (
 	"context"
 	"fmt"
-	"github.com/linxGnu/gosmpp/pdu"
 	cmap "github.com/orcaman/concurrent-map/v2"
+	"github.com/shranet/gosmpp/pdu"
 	"golang.org/x/exp/maps"
 	"strconv"
 	"time"
