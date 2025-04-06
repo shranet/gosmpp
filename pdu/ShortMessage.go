@@ -3,8 +3,8 @@ package pdu
 import (
 	"sync/atomic"
 
-	"github.com/linxGnu/gosmpp/data"
-	"github.com/linxGnu/gosmpp/errors"
+	"github.com/shranet/gosmpp/data"
+	"github.com/shranet/gosmpp/errors"
 )
 
 var ref = uint32(0)

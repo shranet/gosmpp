@@ -7,11 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allegro/bigcache/v3"
-	"github.com/linxGnu/gosmpp/pdu"
+	"github.com/shranet/gosmpp/pdu"
 	"strconv"
 	"time"
 
-	"github.com/linxGnu/gosmpp"
+	"github.com/shranet/gosmpp"
 )
 
 // This is a just an example how to implement a custom store.
