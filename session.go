@@ -47,6 +47,11 @@ func NewSession(c Connector, settings Settings, rebindingInterval time.Duration,
 	if settings.ReadTimeout <= 0 || settings.ReadTimeout <= settings.EnquireLink {
 		return nil, fmt.Errorf("invalid settings: ReadTimeout must greater than max(0, EnquireLink)")
 	}
+
+	if rebindingInterval <= 0 {
+		return nil, fmt.Errorf("invalid settings: RebindingInterval must greater than zero")
+	}
+
 	var requestStore RequestStore = nil
 	if settings.WindowedRequestTracking != nil {
 		requestStore = NewDefaultStore()
@@ -61,43 +66,37 @@ func NewSession(c Connector, settings Settings, rebindingInterval time.Duration,
 		}
 	}
 
-	conn, err := c.Connect()
-	if err == nil {
-		session = &Session{
-			c:                 c,
-			rebindingInterval: rebindingInterval,
-			originalOnClosed:  settings.OnClosed,
-			requestStore:      requestStore,
-		}
-
-		for _, opt := range opts {
-			opt(session)
-		}
-
-		if rebindingInterval > 0 {
-			newSettings := settings
-			newSettings.OnClosed = func(state State) {
-				switch state {
-				case ExplicitClosing:
-					return
-
-				default:
-					if session.originalOnClosed != nil {
-						session.originalOnClosed(state)
-					}
-					session.rebind()
-				}
-			}
-			session.settings = newSettings
-		} else {
-			session.settings = settings
-		}
-
-		// bind to session
-		trans := newTransceivable(conn, session.settings, session.requestStore)
-		trans.start()
-		session.trx.Store(trans)
+	session = &Session{
+		c:                c,
+		originalOnClosed: settings.OnClosed,
+		requestStore:     requestStore,
 	}
+
+	for _, opt := range opts {
+		opt(session)
+	}
+
+	if rebindingInterval > 0 {
+		newSettings := settings
+		newSettings.OnClosed = func(state State) {
+			switch state {
+			case ExplicitClosing:
+				return
+
+			default:
+				if session.originalOnClosed != nil {
+					session.originalOnClosed(state)
+				}
+				session.rebind()
+			}
+		}
+		session.settings = newSettings
+	} else {
+		session.settings = settings
+	}
+
+	go session.rebind()
+
 	return
 }
 
