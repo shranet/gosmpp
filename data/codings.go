@@ -400,7 +400,12 @@ var codingMap = map[byte]Encoding{
 }
 
 // FromDataCoding returns encoding from DataCoding value.
-func FromDataCoding(code byte) (enc Encoding, ok bool) {
+func FromDataCoding(code byte) (enc Encoding) {
+	enc = codingMap[code]
+	return
+}
+
+func GetEncoding(code byte) (enc Encoding, ok bool) {
 	enc, ok = codingMap[code]
 	return
 }
