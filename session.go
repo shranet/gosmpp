@@ -67,9 +67,10 @@ func NewSession(c Connector, settings Settings, rebindingInterval time.Duration,
 	}
 
 	session = &Session{
-		c:                c,
-		originalOnClosed: settings.OnClosed,
-		requestStore:     requestStore,
+		c:                 c,
+		originalOnClosed:  settings.OnClosed,
+		requestStore:      requestStore,
+		rebindingInterval: rebindingInterval,
 	}
 
 	for _, opt := range opts {
