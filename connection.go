@@ -24,6 +24,14 @@ func NewConnection(conn net.Conn) (c *Connection) {
 	return
 }
 
+func (c *Connection) SystemID() string {
+	return c.systemID
+}
+
+func (c *Connection) SetSystemID(id string) {
+	c.systemID = id
+}
+
 // Read reads data from the connection.
 // Read can be made to time out and return an Error with Timeout() == true
 // after a fixed time limit; see SetDeadline and SetReadDeadline.
