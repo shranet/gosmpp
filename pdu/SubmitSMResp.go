@@ -1,6 +1,9 @@
 package pdu
 
 import (
+	"errors"
+	"io"
+
 	"github.com/linxGnu/gosmpp/data"
 )
 
@@ -16,7 +19,7 @@ func NewSubmitSMResp() PDU {
 		base:      newBase(),
 		MessageID: data.DFLT_MSGID,
 	}
-	c.base.ReadOptionalParameters = false
+	c.base.ReadOptionalParameters = true
 	c.CommandID = data.SUBMIT_SM_RESP
 	return c
 }
@@ -52,8 +55,9 @@ func (c *SubmitSMResp) Marshal(b *ByteBuffer) {
 // Unmarshal implements PDU interface.
 func (c *SubmitSMResp) Unmarshal(b *ByteBuffer) error {
 	return c.base.unmarshal(b, func(b *ByteBuffer) (err error) {
-		if c.CommandStatus == data.ESME_ROK {
-			c.MessageID, err = b.ReadCString()
+		c.MessageID, err = b.ReadCString()
+		if errors.Is(err, io.EOF) {
+			return nil
 		}
 		return
 	})
